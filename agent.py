@@ -78,7 +78,7 @@ def run():
 
     # Now simulate it
     sim = Simulator(e, update_delay=0.010)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=10)  # press Esc or close pygame window to quit
+    sim.run(n_trials=100)  # press Esc or close pygame window to quit
     #qla.graph()
     
 
@@ -113,7 +113,7 @@ class QLearningAgent(Agent):
         #print self.resultAnalysis
         
         
-        if self.numOfTrials == 9:
+        if self.numOfTrials == 99:
             print self.resultAnalysis
             self.graph()
         self.numOfTrials += 1     
