@@ -52,52 +52,46 @@ class LearningAgent(Agent):
 #https://github.com/e-dorigatti/tictactoe
 #https://gist.github.com/fheisler/430e70fa249ba30e707f
 
-def choose_action(self, state):
-    q = [self.getQ(state, a) for a in self.actions]
-    maxQ = max(q)
- 
-    if  1:
-        best = [i for i in range(len(self.actions)) if q[i] == maxQ]
-        i = random.choice(best)
-    else:
-        i = q.index(maxQ)
- 
-    action = self.actions[i]
- 
-    return action
-    
+AvgReward = {}
+AvgSteps  = {}    
 
 def run():
     """Run the agent for a finite number of trials."""
 
     # Set up environment and agent
     e = Environment()  # create environment (also adds some dummy traffic)
-    #qla = QLearningAgent(e)
-    a = e.create_agent(QLearningAgent)  # create agent
-    e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
-
-    # Now simulate it
-    sim = Simulator(e, update_delay=0.010)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=100)  # press Esc or close pygame window to quit
-    #qla.graph()
+    #qla = QLearningAgent(e)       
+ 
+     
+    for learningrate in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]:
+        
+        a = e.create_agent(QLearningAgent,learningrate)  # create agent
+        e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
     
+        # Now simulate it
+        sim = Simulator(e, update_delay=0.010)  # reduce update_delay to speed up simulation
+        sim.run(n_trials=10)  # press Esc or close pygame window to quit
+    
+    plotStudyGraph()      
 
 class QLearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
 
-    def __init__(self, env):
+    def __init__(self, env,LearningRate):
         super(QLearningAgent, self).__init__(env)  # sets self.env = env, state = None, next_waypoint = None, and a default color
         self.color = 'green'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
-        # TODO: Initialize any additional variables here
-        self.QPlayer = QLearningPlayer(0.2,0.8,0.8)
+        # TODO: Initialize any additional variables here        
+                 
+        self.QPlayer = QLearningPlayer(LearningRate,0.8,0.8)
         self.QPlayer.start_game('x')
         self.netReward = 0
         self.noOfStepsToDestination = 0
         self.resultAnalysis = {}
         self.resultAnalysis2 = {}
         self.numOfTrials = 0
-        
+        self.breed = "QLearner"
+        self.LearningRate = LearningRate
         
  
     def reset(self, destination=None):
@@ -108,17 +102,22 @@ class QLearningAgent(Agent):
         self.resultAnalysis[(self.numOfTrials)] = self.noOfStepsToDestination
         self.resultAnalysis2[(self.numOfTrials)] = self.netReward
         
+        
+        
         self.netReward = 0
         self.noOfStepsToDestination = 0
-        #print self.resultAnalysis
+        #print self.resultAnalysis        
         
+        if self.numOfTrials == 9:
+            #print self.resultAnalysis
+            self.analyzeResult()
+            AvgReward[self.LearningRate] = np.mean(self.resultAnalysis.values())
+            AvgSteps[self.LearningRate]  = np.mean(self.resultAnalysis2.values())
+            
+        self.numOfTrials += 1    
         
-        if self.numOfTrials == 99:
-            print self.resultAnalysis
-            self.graph()
-        self.numOfTrials += 1     
-                
-        
+
+                       
     def update(self, t):
         # Gather inputs
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
@@ -146,22 +145,28 @@ class QLearningAgent(Agent):
         self.noOfStepsToDestination += 1
         
         #print action, reward
-        self.env.sense(self) #sense the environment
+        self.env.sense(self) #sense the environment #not sure if this makes any difference
         self.QPlayer.reward(reward,self.state)
         
+        # TODO: Learn policy based on state, action, reward
+
+        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        #print self.netReward   
         
-    def graph(self):
+        
+        
+    def analyzeResult(self):
+        
+        
         self.fig = plt.figure(figsize=(8,5))
         x = np.arange(len(self.resultAnalysis))
         y = self.resultAnalysis.values()
-        #print y
+        print "Average Number of Steps to Goal, inputs = {}".format(np.mean(y))  # [debug]
         plt.plot(x,y , 'ro-', linewidth=2)
         plt.title('Learning Performance Plot')
         plt.xlabel('No. of trials')
         plt.ylabel('No. of steps to goal')
-        #I don't like the default legend so I typically make mine like below, e.g.
-        #with smaller fonts and a bit transparent so I do not cover up data, and make
-        #it moveable by the viewer in case upper-right is a bad place for it
+ 
         leg = plt.legend(['Iterations to reach goal'], loc='best', borderpad=0.3,
                          shadow=False, prop=matplotlib.font_manager.FontProperties(size='small'),
                          markerscale=0.4)
@@ -172,6 +177,7 @@ class QLearningAgent(Agent):
         self.fig2 = plt.figure(figsize=(8,5))
         x = np.arange(len(self.resultAnalysis2))
         y = self.resultAnalysis2.values()
+        print "Average Net Reward, inputs = {}".format(np.mean(y)) 
         #print y
         plt.plot(x,y , 'ro-', linewidth=2)
         plt.title('Learning Performance Plot')
@@ -187,12 +193,54 @@ class QLearningAgent(Agent):
         leg.draggable(state=True)
         plt.show()   
         
-        
+        #print('Percent of trials that successfully completed: ' + "".format())
+        #
+         # [debug]
 
-        # TODO: Learn policy based on state, action, reward
-
-        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
-        #print self.netReward
+def plotStudyGraph():
+                        
+            fig = plt.figure(figsize=(8,5))
+            x = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]
+            y = AvgReward.values()
+            print x
+            print y
+            print "Average Number of Steps to Goal, inputs = {}".format(np.mean(y))  # [debug]
+            plt.plot(x,y , 'ro-', linewidth=1)
+            plt.title('Learning Performance Plot')
+            plt.xlabel('Alpha - Learning Rate')
+            plt.ylabel('No. of steps to goal')
+     
+            leg = plt.legend(['Iterations to reach goal'], loc='best', borderpad=0.3,
+                             shadow=False, prop=matplotlib.font_manager.FontProperties(size='small'),
+                             markerscale=0.4)
+            leg.get_frame().set_alpha(0.4)
+            leg.draggable(state=True)
+            plt.show()
+            
+            fig2 = plt.figure(figsize=(8,5))
+            x = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]
+            y = AvgSteps.values()
+            print x 
+            print y
+            print "Average Net Reward, inputs = {}".format(np.mean(y)) 
+            #print y
+            plt.plot(x,y , 'ro-', linewidth=2)
+            plt.title('Learning Performance Plot')
+            plt.xlabel('Alpha - Learning Rate')
+            plt.ylabel('Net Reward')
+            #I don't like the default legend so I typically make mine like below, e.g.
+            #with smaller fonts and a bit transparent so I do not cover up data, and make
+            #it moveable by the viewer in case upper-right is a bad place for it
+            leg = plt.legend(['Net Reward'], loc='best', borderpad=0.3,
+                             shadow=False, prop=matplotlib.font_manager.FontProperties(size='small'),
+                             markerscale=0.4)
+            leg.get_frame().set_alpha(0.4)
+            leg.draggable(state=True)
+            plt.show()   
+            
+            #print('Percent of trials that successfully completed: ' + "".format())
+            #
+             # [debug]
 
 #ref: https://studywolf.wordpress.com/2012/11/25/reinforcement-learning-q-learning-and-exploration/
 #https://github.com/e-dorigatti/tictactoe
@@ -225,7 +273,6 @@ class QLearningPlayer():
         
         actions = Environment.valid_actions[1:]#self.available_moves(board)
         
-                    
         if random.random() < self.epsilon: # explore!
             self.last_move = random.choice(Environment.valid_actions[1:])
             return self.last_move
@@ -253,7 +300,7 @@ class QLearningPlayer():
     def learn(self, state, action, reward,result_state):
         prev = self.getQ(state, action)
         maxqnew = max([self.getQ(result_state,a) for a in Environment.valid_actions])
-                   #self.available_moves(state)])
+        #update the previous state
         self.q[(state, action)] = prev + self.alpha * ((reward + self.gamma*maxqnew) - prev)
 
 
