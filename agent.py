@@ -63,14 +63,15 @@ def run():
     #qla = QLearningAgent(e)       
  
      
-    for learningrate in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]:
+    #for learningrate in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]:
+    for learningrate in [0.5]:
         
         a = e.create_agent(QLearningAgent,learningrate)  # create agent
         e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
     
         # Now simulate it
         sim = Simulator(e, update_delay=0.010)  # reduce update_delay to speed up simulation
-        sim.run(n_trials=10)  # press Esc or close pygame window to quit
+        sim.run(n_trials=100)  # press Esc or close pygame window to quit
     
     plotStudyGraph()      
 
@@ -82,11 +83,19 @@ class QLearningAgent(Agent):
         self.color = 'green'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here        
+        #improvement :
+        #update epsilon to decrease to make  more non-random decisions as we
+        #gather more Q-value for states
+        self.deadline = 100
+        self.noOfStepsToDestination = 0
+        
+        self.epsilon = 0.9*(1-(self.noOfStepsToDestination/self.deadline))  
+        print self.epsilon                  
                  
-        self.QPlayer = QLearningPlayer(LearningRate,0.8,0.8)
+        self.QPlayer = QLearningPlayer(0.2,LearningRate,0.8)
         self.QPlayer.start_game('x')
         self.netReward = 0
-        self.noOfStepsToDestination = 0
+        
         self.resultAnalysis = {}
         self.resultAnalysis2 = {}
         self.numOfTrials = 0
@@ -98,6 +107,7 @@ class QLearningAgent(Agent):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
         # slowly increase gamma or alpha 
+        
         #print self.netReward
         self.resultAnalysis[(self.numOfTrials)] = self.noOfStepsToDestination
         self.resultAnalysis2[(self.numOfTrials)] = self.netReward
@@ -108,7 +118,7 @@ class QLearningAgent(Agent):
         self.noOfStepsToDestination = 0
         #print self.resultAnalysis        
         
-        if self.numOfTrials == 9:
+        if self.numOfTrials == 99:
             #print self.resultAnalysis
             self.analyzeResult()
             AvgReward[self.LearningRate] = np.mean(self.resultAnalysis.values())
@@ -122,7 +132,7 @@ class QLearningAgent(Agent):
         # Gather inputs
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
-        deadline = self.env.get_deadline(self)
+        self.deadline = self.env.get_deadline(self)
 
         # TODO: Update state
         
@@ -150,7 +160,7 @@ class QLearningAgent(Agent):
         
         # TODO: Learn policy based on state, action, reward
 
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(self.deadline, inputs, action, reward)  # [debug]
         #print self.netReward   
         
         
@@ -200,7 +210,8 @@ class QLearningAgent(Agent):
 def plotStudyGraph():
                         
             fig = plt.figure(figsize=(8,5))
-            x = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]
+            #x = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]
+            x = [0.5]
             y = AvgReward.values()
             print x
             print y
@@ -218,7 +229,8 @@ def plotStudyGraph():
             plt.show()
             
             fig2 = plt.figure(figsize=(8,5))
-            x = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]
+            #x = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.9,1.0]
+            x = [0.5]
             y = AvgSteps.values()
             print x 
             print y
