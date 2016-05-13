@@ -67,6 +67,7 @@ def run():
     for learningrate in [0.5]:
         
         a = e.create_agent(QLearningAgent,learningrate)  # create agent
+        #a = e.create_agent(LearningAgent)
         e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
     
         # Now simulate it
@@ -90,7 +91,7 @@ class QLearningAgent(Agent):
         self.noOfStepsToDestination = 0
         
         self.epsilon = 0.9*(1-(self.noOfStepsToDestination/self.deadline))  
-        print self.epsilon                  
+        print "epsilon = {}".format(self.epsilon)                  
                  
         self.QPlayer = QLearningPlayer(0.2,LearningRate,0.8)
         self.QPlayer.start_game('x')
