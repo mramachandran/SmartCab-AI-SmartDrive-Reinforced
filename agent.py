@@ -30,7 +30,7 @@ class LearningAgent(Agent):
         self.planner.route_to(destination)
         self.start_game('x')
         # TODO: Prepare for a new trip; reset any variables here, if required
-        if self.numOfTrials == 9:
+        if self.numOfTrials == 99:
             #print self.resultAnalysis
             self.analyzeResult()
 
@@ -120,6 +120,7 @@ class LearningAgent(Agent):
         self.fig = plt.figure(figsize=(8,5))
         x = np.arange(len(self.resultAnalysis))
         y = self.resultAnalysis.values()
+        
         print "Average Number of Steps to Goal, inputs = {}".format(np.mean(y))  # [debug]
         plt.plot(x,y , 'ro-', linewidth=2)
         plt.title('Learning Performance Plot')
@@ -136,6 +137,7 @@ class LearningAgent(Agent):
         self.fig2 = plt.figure(figsize=(8,5))
         x = np.arange(len(self.resultAnalysis2))
         y = self.resultAnalysis2.values()
+        
         print "Average Net Reward, inputs = {}".format(np.mean(y)) 
         #print y
         plt.plot(x,y , 'ro-', linewidth=2)
@@ -163,7 +165,7 @@ def run():
 
     # Now simulate it
     sim = Simulator(e, update_delay=0.1)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=10)  # press Esc or close pygame window to quit
+    sim.run(n_trials=100)  # press Esc or close pygame window to quit
 
  
 
