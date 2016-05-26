@@ -30,9 +30,9 @@ class LearningAgent(Agent):
         self.planner.route_to(destination)
         self.start_game('x')
         # TODO: Prepare for a new trip; reset any variables here, if required
-        if self.numOfTrials == 99:
-            #print self.resultAnalysis
-            self.analyzeResult()
+        #if self.numOfTrials == 10:
+            
+          #  self.analyzeResult()
 
 
     def update(self, t):
@@ -165,7 +165,7 @@ def run():
 
     # Now simulate it
     sim = Simulator(e, update_delay=0.1)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=100)  # press Esc or close pygame window to quit
+    sim.run(n_trials=10)  # press Esc or close pygame window to quit
 
  
 
