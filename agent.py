@@ -15,7 +15,7 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         self.epsilon=0.2
-        self.alpha=0.8
+        self.alpha=0.8 #optimal learning rate identified through parameterizaton
         self.gamma=0.8
         self.q = {} # (state, action) keys: Q values
         
@@ -30,9 +30,8 @@ class LearningAgent(Agent):
         self.planner.route_to(destination)
         self.start_game('x')
         # TODO: Prepare for a new trip; reset any variables here, if required
-        #if self.numOfTrials == 10:
-            
-          #  self.analyzeResult()
+        #if self.numOfTrials == 100:
+            #self.analyzeResult()
 
 
     def update(self, t):
@@ -49,12 +48,19 @@ class LearningAgent(Agent):
                       inputs['light']
                         
                      }
+        # random events
+        #action = random.choice(Environment.valid_actions[1:])
+        #reward = self.env.act(self, action)
         
+        #Q-Learning
         # TODO: Select action according to your policy
         action = self.move(self.state)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
+        
+        #if reward == -1:
+           #print 'wrong move'
 
         self.updateQ(reward,self.state)  
         # TODO: Learn policy based on state, action, reward
@@ -164,8 +170,8 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.1)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=10)  # press Esc or close pygame window to quit
+    sim = Simulator(e, update_delay=0)  # reduce update_delay to speed up simulation
+    sim.run(n_trials=100)  # press Esc or close pygame window to quit
 
  
 
